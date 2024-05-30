@@ -36,6 +36,8 @@ public class CustomSkin : MonoBehaviour
     public Sprite[] Just = new Sprite[36];
     public Sprite[] JudgeText = new Sprite[5];
     public Sprite JudgeText_Break;
+    public Sprite FastText;
+    public Sprite LateText;
 
     public Sprite Touch;
     public Sprite Touch_Each;
@@ -154,6 +156,9 @@ public class CustomSkin : MonoBehaviour
         JudgeText[3] = SpriteLoader.LoadSpriteFromFile(path + "/judge_text_perfect.png");
         JudgeText[4] = SpriteLoader.LoadSpriteFromFile(path + "/judge_text_cPerfect.png");
         JudgeText_Break = SpriteLoader.LoadSpriteFromFile(path + "/judge_text_break.png");
+
+        FastText = SpriteLoader.LoadSpriteFromFile(path + "/fast.png");
+        LateText = SpriteLoader.LoadSpriteFromFile(path + "/late.png");
 
         Touch = SpriteLoader.LoadSpriteFromFile(path + "/touch.png");
         Touch_Each = SpriteLoader.LoadSpriteFromFile(path + "/touch_each.png");

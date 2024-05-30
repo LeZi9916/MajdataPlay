@@ -232,7 +232,9 @@ public class TapDrop : NoteDrop
     }
     private void OnDestroy()
     {
-        GameObject.Find("NoteEffects").GetComponent<NoteEffectManager>().PlayEffect(startPosition, isBreak, judgeResult);
+        var effectManager = GameObject.Find("NoteEffects").GetComponent<NoteEffectManager>();
+        effectManager.PlayEffect(startPosition, isBreak, judgeResult);
+        effectManager.PlayFastLate(startPosition, judgeResult);
         if (isBreak) ObjectCounter.breakCount++;
         else ObjectCounter.tapCount++;
         GameObject.Find("Notes").GetComponent<NoteManager>().noteCount[startPosition]++;

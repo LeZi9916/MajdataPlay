@@ -318,9 +318,7 @@ public class HoldDrop : NoteLongDrop
         var realityHT = LastFor - 0.3f;
         var percent = MathF.Min(1, (userHold.ElapsedMilliseconds / 1000f) / realityHT);
         JudgeType result = headJudge;
-        if(realityHT <= 0)
-            GameObject.Find("NoteEffects").GetComponent<NoteEffectManager>().PlayEffect(startPosition, isBreak,headJudge);
-        else
+        if(realityHT > 0)
         {
             if (percent == 1)
                 result = headJudge;
@@ -349,14 +347,17 @@ public class HoldDrop : NoteLongDrop
                 else
                     result = (int)headJudge < 7 ? JudgeType.LateGood : JudgeType.FastGood;
             }
-            GameObject.Find("NoteEffects").GetComponent<NoteEffectManager>().PlayEffect(startPosition, isBreak, result);
         }
+        var effectManager = GameObject.Find("NoteEffects").GetComponent<NoteEffectManager>();
+        effectManager.PlayEffect(startPosition, isBreak, result);
+        effectManager.PlayFastLate(startPosition, result);
         if (isBreak)
             GameObject.Find("ObjectCounter").GetComponent<ObjectCounter>().breakCount++;
         else
             GameObject.Find("ObjectCounter").GetComponent<ObjectCounter>().holdCount++;
         if (GameObject.Find("Input").GetComponent<InputManager>().AutoPlay)
             manager.SetSensorOff(sensor.Type, guid);
+        sensor.OnSensorStatusChange -= Check;
     }
     void PlayHoldEffect()
     {

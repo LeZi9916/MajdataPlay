@@ -420,6 +420,8 @@ public class WifiDrop : NoteLongDrop,IFlasher
     }
     void Running()
     {
+        if (!GameObject.Find("Input").GetComponent<InputManager>().AutoPlay)
+            return;
         foreach(var star in star_slide)
         {
             var starRadius = 0.763736616f;

@@ -31,6 +31,9 @@ public class NoteEffectManager : MonoBehaviour
     private readonly GameObject[] tapEffects = new GameObject[8];
     private readonly GameObject[] greatEffects = new GameObject[8];
     private readonly GameObject[] goodEffects = new GameObject[8];
+
+    private readonly Animator[] fastLateAnims = new Animator[8];
+    private readonly GameObject[] fastLateEffects = new GameObject[8];
     Sprite[] judgeText;
 
     // Start is called before the first frame update
@@ -40,29 +43,28 @@ public class NoteEffectManager : MonoBehaviour
         var greatEffectParent = transform.GetChild(2).gameObject;
         var goodEffectParent = transform.GetChild(3).gameObject;
         var judgeEffectParent = transform.GetChild(1).gameObject;
+        var flParent = transform.GetChild(4).gameObject;
 
-        for (var i = 0; i < tapEffectParent.transform.childCount; i++)
-        {
-            tapEffects[i] = tapEffectParent.transform.GetChild(i).gameObject;
-            tapAnimators[i] = tapEffects[i].GetComponent<Animator>();
-            tapEffects[i].SetActive(false);
-        }
-        for (var i = 0; i < greatEffectParent.transform.childCount; i++)
-        {
-            greatEffects[i] = greatEffectParent.transform.GetChild(i).gameObject;
-            greatAnimators[i] = greatEffects[i].GetComponent<Animator>();
-            greatEffects[i].SetActive(false);
-        }
-        for (var i = 0; i < goodEffectParent.transform.childCount; i++)
-        {
-            goodEffects[i] = goodEffectParent.transform.GetChild(i).gameObject;
-            greatAnimators[i] = goodEffects[i].GetComponent<Animator>();
-            goodEffects[i].SetActive(false);
-        }
-        for (var i = 0; i < judgeEffectParent.transform.childCount; i++)
+        for (var i = 0; i < 8; i++)
         {
             judgeEffects[i] = judgeEffectParent.transform.GetChild(i).gameObject;
             judgeAnimators[i] = judgeEffects[i].GetComponent<Animator>();
+
+            fastLateEffects[i] = flParent.transform.GetChild(i).gameObject;
+            fastLateAnims[i] = fastLateEffects[i].GetComponent<Animator>();
+
+            goodEffects[i] = goodEffectParent.transform.GetChild(i).gameObject;
+            greatAnimators[i] = goodEffects[i].GetComponent<Animator>();
+            goodEffects[i].SetActive(false);
+
+            greatEffects[i] = greatEffectParent.transform.GetChild(i).gameObject;
+            greatAnimators[i] = greatEffects[i].GetComponent<Animator>();
+            greatEffects[i].SetActive(false);
+
+            tapEffects[i] = tapEffectParent.transform.GetChild(i).gameObject;
+            tapAnimators[i] = tapEffects[i].GetComponent<Animator>();
+            tapEffects[i].SetActive(false);
+
         }
 
         LoadSkin();
@@ -154,6 +156,24 @@ public class NoteEffectManager : MonoBehaviour
             judgeAnimators[pos].SetTrigger("break");
         else
             judgeAnimators[pos].SetTrigger("perfect");
+    }
+    public void PlayFastLate(int position,JudgeType judge)
+    {
+        var customSkin = GameObject.Find("Outline").GetComponent<CustomSkin>();
+        var pos = position - 1;
+        if ((int)judge is (0 or 7))
+        {
+            fastLateEffects[pos].SetActive(false);
+            return;
+        }
+        fastLateEffects[pos].SetActive(true);
+        bool isFast = (int)judge > 7;
+        if(isFast)
+            fastLateEffects[pos].transform.GetChild(0).GetChild(0).gameObject.GetComponent<SpriteRenderer>().sprite = customSkin.FastText;
+        else
+            fastLateEffects[pos].transform.GetChild(0).GetChild(0).gameObject.GetComponent<SpriteRenderer>().sprite = customSkin.LateText;
+        fastLateAnims[pos].SetTrigger("perfect");
+
     }
     public void ResetEffect(int position)
     {
