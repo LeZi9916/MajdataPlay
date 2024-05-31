@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.U2D;
+using static NoteEffectManager;
 using static Sensor;
 
 public class TouchDrop : NoteDrop
@@ -47,6 +50,9 @@ public class TouchDrop : NoteDrop
     Guid guid = Guid.NewGuid();
     SensorManager manager;
     Sensor sensor;
+    NoteManager noteManager;
+    JudgeType judgeResult;
+    bool isJudged = false;
 
     // Start is called before the first frame update
     private void Start()
@@ -56,6 +62,7 @@ public class TouchDrop : NoteDrop
         displayDuration = 0.2f * wholeDuration;
 
         var notes = GameObject.Find("Notes").transform;
+        noteManager = notes.GetComponent<NoteManager>();
         timeProvider = GameObject.Find("AudioTimeProvider").GetComponent<AudioTimeProvider>();
         multTouchHandler = GameObject.Find("MultTouchHandler").GetComponent<MultTouchHandler>();
 
@@ -94,7 +101,56 @@ public class TouchDrop : NoteDrop
         manager = GameObject.Find("Sensors")
                                 .GetComponent<SensorManager>();
     }
-    SensorType GetSensor()
+    void Check(SensorType s, SensorStatus oStatus, SensorStatus nStatus)
+    {
+        if (!noteManager.CanJudge(gameObject, sensor.Type))
+            return;
+        else if (oStatus == SensorStatus.Off && nStatus == SensorStatus.On)
+            Judge();
+    }
+    private void FixedUpdate()
+    {
+        if (!isJudged && timeProvider.AudioTime - time > 0.25f)
+        {
+            judgeResult = JudgeType.Miss;
+            Destroy(gameObject);
+        }
+        else if (isJudged)
+            Destroy(gameObject);
+    }
+    void Judge()
+    {
+
+        const int JUDGE_GOOD_AREA = 250;
+        const int JUDGE_GREAT_AREA = 216;
+        const int JUDGE_PERFECT_AREA = 183;
+
+        const float JUDGE_SEG_PERFECT = 150f;
+
+        if (isJudged)
+            return;
+
+        var timing = timeProvider.AudioTime - time;
+        var isFast = timing < 0;
+        var diff = MathF.Abs(timing * 1000);
+        JudgeType result;
+        if (diff > JUDGE_SEG_PERFECT && isFast)
+            return;
+        else if (diff < JUDGE_SEG_PERFECT)
+            result = JudgeType.Perfect;
+        else if (diff < JUDGE_PERFECT_AREA)
+            result = JudgeType.LatePerfect2;
+        else if (diff < JUDGE_GREAT_AREA)
+            result = JudgeType.LateGreat;
+        else if (diff < JUDGE_GOOD_AREA)
+            result = JudgeType.LateGood;
+        else
+            result = JudgeType.Miss;
+
+        judgeResult = result;
+        isJudged = true;
+    }
+    public SensorType GetSensor()
     {
         switch(areaPosition)
         {
@@ -122,12 +178,14 @@ public class TouchDrop : NoteDrop
         var pow = -Mathf.Exp(8 * (timing * 0.4f / moveDuration) - 0.85f) + 0.42f;
         var distance = Mathf.Clamp(pow, 0f, 0.4f);
 
-        if (timing >= 0)
+        if (timing >= 0 && GameObject.Find("Input").GetComponent<InputManager>().AutoPlay)
         {
             manager.SetSensorOn(sensor.Type, guid);
             if (timing > 0.02)
                 Destroy(gameObject);
         }
+        else if (timing >= 0)
+            return;
 
         if (timing > -0.02f) justEffect.SetActive(true);
 

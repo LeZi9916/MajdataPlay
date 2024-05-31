@@ -50,6 +50,7 @@ public class TapDrop : NoteDrop
     NoteManager noteManager;
     Sensor sensor;
     JudgeType judgeResult;
+    InputManager inputManager;
     bool isJudged = false;
 
     private int GetSortOrder()
@@ -59,7 +60,7 @@ public class TapDrop : NoteDrop
 
     private void FixedUpdate()
     {
-        if(!isJudged && timeProvider.AudioTime - time > 0.15f)
+        if (!isJudged && timeProvider.AudioTime - time > 0.15f)
         {
             judgeResult = JudgeType.Miss;
             Destroy(tapLine);
@@ -112,7 +113,10 @@ public class TapDrop : NoteDrop
                                    .GetComponent<Sensor>();
         manager = GameObject.Find("Sensors")
                                 .GetComponent<SensorManager>();
+        inputManager = GameObject.Find("Input")
+                                 .GetComponent<InputManager>();
         sensor.OnSensorStatusChange += Check;
+        inputManager.OnSensorStatusChange += Check;
     }
 
     // Update is called once per frame
@@ -179,10 +183,21 @@ public class TapDrop : NoteDrop
     }
     void Check(SensorType s,SensorStatus oStatus, SensorStatus nStatus)
     {
-        if (!noteManager.CanJudge(gameObject, startPosition))
+        if (isJudged)
             return;
-        else if (oStatus == SensorStatus.Off && nStatus == SensorStatus.On)
+        if (oStatus == SensorStatus.Off && nStatus == SensorStatus.On)
+        {
+            if (sensor.IsJudging)
+                return;
+            else
+                sensor.IsJudging = true;
             Judge();
+            if (isJudged)
+            {
+                Destroy(tapLine);
+                Destroy(gameObject);
+            }
+        }
     }
     void Judge()
     {
@@ -241,6 +256,7 @@ public class TapDrop : NoteDrop
         if (GameObject.Find("Input").GetComponent<InputManager>().AutoPlay)
             manager.SetSensorOff(sensor.Type, guid);
         sensor.OnSensorStatusChange -= Check;
+        inputManager.OnSensorStatusChange -= Check;
     }
     private Vector3 getPositionFromDistance(float distance)
     {

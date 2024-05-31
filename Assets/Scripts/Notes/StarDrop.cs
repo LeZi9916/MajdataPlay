@@ -59,6 +59,7 @@ public class StarDrop : NoteDrop
     Sensor sensor;
     NoteManager noteManager;
     JudgeType judgeResult;
+    InputManager inputManager;
     bool isJudged = false;
 
     private void Start()
@@ -127,7 +128,10 @@ public class StarDrop : NoteDrop
                                    .GetComponent<Sensor>();
             manager = GameObject.Find("Sensors")
                                     .GetComponent<SensorManager>();
+            inputManager = GameObject.Find("Input")
+                                 .GetComponent<InputManager>();
             sensor.OnSensorStatusChange += Check;
+            inputManager.OnSensorStatusChange += Check;
         }
     }
     private void FixedUpdate()
@@ -216,10 +220,21 @@ public class StarDrop : NoteDrop
     }
     void Check(SensorType s, SensorStatus oStatus, SensorStatus nStatus)
     {
-        if (!noteManager.CanJudge(gameObject, startPosition))
+        if (isJudged)
             return;
-        else if (oStatus == SensorStatus.Off && nStatus == SensorStatus.On)
+        if (oStatus == SensorStatus.Off && nStatus == SensorStatus.On)
+        {
+            if (sensor.IsJudging)
+                return;
+            else
+                sensor.IsJudging = true;
             Judge();
+            if (isJudged)
+            {
+                Destroy(tapLine);
+                Destroy(gameObject);
+            }
+        }
     }
     void Judge()
     {
@@ -280,6 +295,7 @@ public class StarDrop : NoteDrop
             if (GameObject.Find("Input").GetComponent<InputManager>().AutoPlay)
                 manager.SetSensorOff(sensor.Type, guid);
             sensor.OnSensorStatusChange -= Check;
+            inputManager.OnSensorStatusChange -= Check;
         }
     }
     private Vector3 getPositionFromDistance(float distance)

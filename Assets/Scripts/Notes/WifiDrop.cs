@@ -224,7 +224,7 @@ public class WifiDrop : NoteLongDrop,IFlasher
             else if (!ConnectInfo.IsGroupPartHead)
                 canCheck = ConnectInfo.ParentFinished;
         }
-        else if (startTiming >= -0.040f)
+        else if (startTiming >= -0.050f)
             canCheck = true;
 
         if (timing > 0)

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using UnityEngine;
 using static NoteEffectManager;
 using static Sensor;
+using static UnityEngine.EventSystems.EventTrigger;
 using Random = System.Random;
 
 public class HoldDrop : NoteLongDrop
@@ -35,6 +36,7 @@ public class HoldDrop : NoteLongDrop
     public GameObject holdEffect;
 
     public GameObject tapLine;
+    public Material missMaterial;
 
     public Color exEffectTap;
     public Color exEffectEach;
@@ -59,7 +61,7 @@ public class HoldDrop : NoteLongDrop
     JudgeType headJudge;
     bool isJudged;
     NoteManager noteManager;
-    
+    InputManager inputManager;
     Stopwatch userHold = new();
     float lastHoldTiming = -1;
 
@@ -119,7 +121,10 @@ public class HoldDrop : NoteLongDrop
                                    .GetComponent<Sensor>();
         manager = GameObject.Find("Sensors")
                                 .GetComponent<SensorManager>();
+        inputManager = GameObject.Find("Input")
+                                 .GetComponent<InputManager>();
         sensor.OnSensorStatusChange += Check;
+        inputManager.OnSensorStatusChange += Check;
     }
     private void FixedUpdate()
     {
@@ -129,6 +134,7 @@ public class HoldDrop : NoteLongDrop
         {
             headJudge = JudgeType.Miss;
             sensor.OnSensorStatusChange -= Check;
+            inputManager.OnSensorStatusChange -= Check;
             isJudged = true;
             GameObject.Find("Notes").GetComponent<NoteManager>().noteCount[startPosition]++;
         }
@@ -163,13 +169,20 @@ public class HoldDrop : NoteLongDrop
     }
     void Check(SensorType s, SensorStatus oStatus, SensorStatus nStatus)
     {
-        if (!noteManager.CanJudge(gameObject, startPosition))
-            return;
-        else if (oStatus == SensorStatus.Off && nStatus == SensorStatus.On)
-            Judge();
+        if (oStatus == SensorStatus.Off && nStatus == SensorStatus.On)
+        {
+            if (sensor.IsJudging)
+                return;
+            else
+                sensor.IsJudging = true;
+            Judge(); 
+        }
 
         if(isJudged)
+        {
             sensor.OnSensorStatusChange -= Check;
+            inputManager.OnSensorStatusChange -= Check;
+        }
     }
     void Judge()
     {
@@ -357,7 +370,10 @@ public class HoldDrop : NoteLongDrop
             GameObject.Find("ObjectCounter").GetComponent<ObjectCounter>().holdCount++;
         if (GameObject.Find("Input").GetComponent<InputManager>().AutoPlay)
             manager.SetSensorOff(sensor.Type, guid);
+        if(!isJudged)
+            GameObject.Find("Notes").GetComponent<NoteManager>().noteCount[startPosition]++;
         sensor.OnSensorStatusChange -= Check;
+        inputManager.OnSensorStatusChange -= Check;
     }
     void PlayHoldEffect()
     {
@@ -366,11 +382,33 @@ public class HoldDrop : NoteLongDrop
         var endTime = time + LastFor;
         GameObject.Find("NoteEffects").GetComponent<NoteEffectManager>().ResetEffect(startPosition);
         holdEffect.SetActive(true);
+        
 
         if (LastFor <= 0.3)
             return;
         else if (!holdAnimStart && timeProvider.AudioTime - time > 0.1)//忽略开头6帧与结尾12帧
-        {            
+        {
+            var material = holdEffect.GetComponent<ParticleSystemRenderer>().material;
+            switch (headJudge)
+            {
+                case JudgeType.LateGreat:
+                case JudgeType.LateGreat1:
+                case JudgeType.LateGreat2:
+                case JudgeType.FastGreat2:
+                case JudgeType.FastGreat1:
+                case JudgeType.FastGreat:
+                    material.SetColor("_Color", new Color(1f, 0.44f, 0.70f)); // Pink
+                    break;
+                case JudgeType.LateGood:
+                case JudgeType.FastGood:
+                    material.SetColor("_Color", new Color(0.22f, 0.98f, 0.30f)); // Green
+                    break;
+                case JudgeType.Miss:
+                    holdEffect.GetComponent<ParticleSystemRenderer>().material = missMaterial;
+                    break;
+                default:
+                    break;
+            }
             holdAnimStart = true;
             animator.runtimeAnimatorController = HoldShine;
             animator.enabled = true;
@@ -381,7 +419,6 @@ public class HoldDrop : NoteLongDrop
                 sprRenderer.sprite = eachHoldOnSpr;
             else
                 sprRenderer.sprite = holdOnSpr;
-
         }
     }
     void StopHoldEffect()
