@@ -183,6 +183,8 @@ public class TapDrop : NoteDrop
     }
     void Check(SensorType s,SensorStatus oStatus, SensorStatus nStatus)
     {
+        if (s != sensor.Type)
+            return;
         if (isJudged || !noteManager.CanJudge(gameObject, startPosition))
             return;
         if (oStatus == SensorStatus.Off && nStatus == SensorStatus.On)
