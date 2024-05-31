@@ -299,7 +299,7 @@ public class WifiDrop : NoteLongDrop,IFlasher
                 first.Judge(t, sensor.Status);
             }
 
-            if (second is not null)
+            if (second is not null && (first.CanSkip || first.On))
             {
                 var sType = second.GetSensorTypes();
                 foreach (var t in sType)

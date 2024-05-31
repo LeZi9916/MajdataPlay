@@ -63,7 +63,7 @@ public class HoldDrop : NoteLongDrop
     NoteManager noteManager;
     InputManager inputManager;
     Stopwatch userHold = new();
-    float lastHoldTiming = -1;
+    float judgeDiff = -1;
 
     private void Start()
     {
@@ -132,6 +132,7 @@ public class HoldDrop : NoteLongDrop
         var holdTime = timing - LastFor;
         if (!isJudged && timing > 0.15f)
         {
+            judgeDiff = 150;
             headJudge = JudgeType.Miss;
             sensor.OnSensorStatusChange -= Check;
             inputManager.OnSensorStatusChange -= Check;
@@ -169,6 +170,8 @@ public class HoldDrop : NoteLongDrop
     }
     void Check(SensorType s, SensorStatus oStatus, SensorStatus nStatus)
     {
+        if (isJudged || !noteManager.CanJudge(gameObject, startPosition))
+            return;
         if (oStatus == SensorStatus.Off && nStatus == SensorStatus.On)
         {
             if (sensor.IsJudging)
@@ -182,6 +185,7 @@ public class HoldDrop : NoteLongDrop
         {
             sensor.OnSensorStatusChange -= Check;
             inputManager.OnSensorStatusChange -= Check;
+            GameObject.Find("Notes").GetComponent<NoteManager>().noteCount[startPosition]++;
         }
     }
     void Judge()
@@ -226,10 +230,12 @@ public class HoldDrop : NoteLongDrop
             result = 14 - result;
         if (result != JudgeType.Miss && isEX)
             result = JudgeType.Perfect;
-
+        judgeDiff = isFast ? -diff : diff;
+        if (!userHold.IsRunning)
+            userHold.Start();
+        PlayHoldEffect();
         headJudge = result;
         isJudged = true;
-        GameObject.Find("Notes").GetComponent<NoteManager>().noteCount[startPosition]++;
     }
     // Update is called once per frame
     private void Update()
@@ -250,20 +256,13 @@ public class HoldDrop : NoteLongDrop
 
         var holdTime = timing - LastFor;
         var holdDistance = holdTime * speed + 4.8f;
-        if (holdTime > 0 && GameObject.Find("Input").GetComponent<InputManager>().AutoPlay)
+        if (holdTime >= 0)
         {
-            manager.SetSensorOn(sensor.Type, guid);
-            if (timing > 0.02)
-            {
-                Destroy(tapLine);
-                Destroy(holdEffect);
-                Destroy(gameObject);
-            }
+            if(GameObject.Find("Input").GetComponent<InputManager>().AutoPlay)
+                manager.SetSensorOn(sensor.Type, guid);
             return;
         }
 
-        if (holdTime >= 0)
-            return;
 
         transform.rotation = Quaternion.Euler(0, 0, -22.5f + -45f * (startPosition - 1));
         tapLine.transform.rotation = transform.rotation;
@@ -328,13 +327,23 @@ public class HoldDrop : NoteLongDrop
     }
     private void OnDestroy()
     {
+        var diff = judgeDiff - 300;
+        if (judgeDiff > 0)
+            diff = MathF.Max(judgeDiff,100) + 200;
         var realityHT = LastFor - 0.3f;
-        var percent = MathF.Min(1, (userHold.ElapsedMilliseconds / 1000f) / realityHT);
+        var percent = MathF.Min(1, ((userHold.ElapsedMilliseconds - diff) / 1000f) / realityHT);
         JudgeType result = headJudge;
         if(realityHT > 0)
         {
             if (percent == 1)
-                result = headJudge;
+            {
+                if(headJudge == JudgeType.Miss)
+                    result = JudgeType.LateGood;
+                else if (MathF.Abs((int)headJudge - 7) == 6)
+                    result = (int)headJudge < 7 ? JudgeType.LateGreat : JudgeType.FastGreat;
+                else
+                    result = headJudge;
+            }
             else if (percent >= 0.67f)
             {
                 if (headJudge == JudgeType.Miss)
@@ -379,36 +388,43 @@ public class HoldDrop : NoteLongDrop
     {
         if(GameObject.Find("Input").GetComponent<InputManager>().AutoPlay)
             manager.SetSensorOn(sensor.Type, guid);
-        var endTime = time + LastFor;
+        if (timeProvider.AudioTime - time < 0)
+            return;
         GameObject.Find("NoteEffects").GetComponent<NoteEffectManager>().ResetEffect(startPosition);
         holdEffect.SetActive(true);
-        
 
+        var material = holdEffect.GetComponent<ParticleSystemRenderer>().material;
+        switch (headJudge)
+        {
+            case JudgeType.LatePerfect2:
+            case JudgeType.FastPerfect2:
+            case JudgeType.LatePerfect1:
+            case JudgeType.FastPerfect1:
+            case JudgeType.Perfect:
+                material.SetColor("_Color", new Color(1f, 0.93f, 0.61f)); // Yellow
+                break;
+            case JudgeType.LateGreat:
+            case JudgeType.LateGreat1:
+            case JudgeType.LateGreat2:
+            case JudgeType.FastGreat2:
+            case JudgeType.FastGreat1:
+            case JudgeType.FastGreat:
+                material.SetColor("_Color", new Color(1f, 0.70f, 0.94f)); // Pink
+                break;
+            case JudgeType.LateGood:
+            case JudgeType.FastGood:
+                material.SetColor("_Color", new Color(0.56f, 1f, 0.59f)); // Green
+                break;
+            case JudgeType.Miss:
+                material.SetColor("_Color", new Color(1f, 1f, 1f));
+                break;
+            default:
+                break;
+        }
         if (LastFor <= 0.3)
             return;
         else if (!holdAnimStart && timeProvider.AudioTime - time > 0.1)//忽略开头6帧与结尾12帧
         {
-            var material = holdEffect.GetComponent<ParticleSystemRenderer>().material;
-            switch (headJudge)
-            {
-                case JudgeType.LateGreat:
-                case JudgeType.LateGreat1:
-                case JudgeType.LateGreat2:
-                case JudgeType.FastGreat2:
-                case JudgeType.FastGreat1:
-                case JudgeType.FastGreat:
-                    material.SetColor("_Color", new Color(1f, 0.44f, 0.70f)); // Pink
-                    break;
-                case JudgeType.LateGood:
-                case JudgeType.FastGood:
-                    material.SetColor("_Color", new Color(0.22f, 0.98f, 0.30f)); // Green
-                    break;
-                case JudgeType.Miss:
-                    holdEffect.GetComponent<ParticleSystemRenderer>().material = missMaterial;
-                    break;
-                default:
-                    break;
-            }
             holdAnimStart = true;
             animator.runtimeAnimatorController = HoldShine;
             animator.enabled = true;

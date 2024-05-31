@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using static Sensor;
-using static UnityEditor.PlayerSettings;
 
 public class NoteManager : MonoBehaviour
 {

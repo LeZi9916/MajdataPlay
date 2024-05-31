@@ -1,7 +1,10 @@
 fileFormatVersion: 2
-guid: 1b751b8c416ac8a4a92ea22e5d638905
+guid: 889dc6c813d8a8744a3e20fc8964cd9b
 TextureImporter:
-  internalIDToNameTable: []
+  internalIDToNameTable:
+  - first:
+      213: 1777552499124081267
+    second: UI_NOTES_Touch_Hold_hold_Miss_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -65,7 +68,7 @@ TextureImporter:
   ignorePngGamma: 0
   applyGammaDecoding: 0
   swizzle: 50462976
-  cookieLightType: 1
+  cookieLightType: 0
   platformSettings:
   - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
@@ -95,7 +98,28 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites: []
+    sprites:
+    - serializedVersion: 2
+      name: UI_NOTES_Touch_Hold_hold_Miss_0
+      rect:
+        serializedVersion: 2
+        x: 1
+        y: 0
+        width: 209
+        height: 210
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 37216ef74922ba810800000000000000
+      internalID: 1777552499124081267
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     physicsShape: []
     bones: []
@@ -106,7 +130,8 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      UI_NOTES_Touch_Hold_hold_Miss_0: 1777552499124081267
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -17,6 +17,7 @@ public class TouchDrop : NoteDrop
 
     public GameObject tapEffect;
     public GameObject justEffect;
+    public GameObject judgeEffect;
 
     public GameObject multTouchEffect2;
     public GameObject multTouchEffect3;
@@ -53,6 +54,7 @@ public class TouchDrop : NoteDrop
     NoteManager noteManager;
     JudgeType judgeResult;
     bool isJudged = false;
+    Sprite[] judgeText;
 
     // Start is called before the first frame update
     private void Start()
@@ -100,17 +102,32 @@ public class TouchDrop : NoteDrop
                                    .GetComponent<Sensor>();
         manager = GameObject.Find("Sensors")
                                 .GetComponent<SensorManager>();
+
+        var customSkin = GameObject.Find("Outline").GetComponent<CustomSkin>();
+        judgeText = customSkin.JudgeText;
+        sensor.OnSensorStatusChange += Check;
     }
     void Check(SensorType s, SensorStatus oStatus, SensorStatus nStatus)
     {
-        if (!noteManager.CanJudge(gameObject, sensor.Type))
+        if (isJudged || !noteManager.CanJudge(gameObject, sensor.Type))
             return;
         else if (oStatus == SensorStatus.Off && nStatus == SensorStatus.On)
+        {
+            if (sensor.IsJudging)
+                return;
+            else
+                sensor.IsJudging = true;
             Judge();
+            if (isJudged)
+            {
+                sensor.OnSensorStatusChange -= Check;
+                Destroy(gameObject);
+            }
+        }
     }
     private void FixedUpdate()
     {
-        if (!isJudged && timeProvider.AudioTime - time > 0.25f)
+        if (!isJudged && timeProvider.AudioTime - time > 0.316667f)
         {
             judgeResult = JudgeType.Miss;
             Destroy(gameObject);
@@ -181,8 +198,6 @@ public class TouchDrop : NoteDrop
         if (timing >= 0 && GameObject.Find("Input").GetComponent<InputManager>().AutoPlay)
         {
             manager.SetSensorOn(sensor.Type, guid);
-            if (timing > 0.02)
-                Destroy(gameObject);
         }
         else if (timing >= 0)
             return;
@@ -220,14 +235,56 @@ public class TouchDrop : NoteDrop
     private void OnDestroy()
     {
         multTouchHandler.cancelTouch(this);
-        Instantiate(tapEffect, transform.position, transform.rotation);
+        PlayJudgeEffect();
         GameObject.Find("ObjectCounter").GetComponent<ObjectCounter>().touchCount++;
-        if (isFirework)
+        GameObject.Find("Notes").GetComponent<NoteManager>().touchCount[sensor.Type]++;
+        if (isFirework && judgeResult != JudgeType.Miss)
         {
             fireworkEffect.SetTrigger("Fire");
             firework.transform.position = transform.position;
         }
+        sensor.OnSensorStatusChange -= Check;
         manager.SetSensorOff(sensor.Type, guid);
+    }
+    void PlayJudgeEffect()
+    {
+        var obj = Instantiate(judgeEffect, Vector3.zero,transform.rotation);
+        var judgeObj = obj.transform.GetChild(0);
+        judgeObj.transform.position = transform.position;
+        judgeObj.GetChild(0).transform.rotation = GetRoation();
+        var anim = obj.GetComponent<Animator>();
+        switch(judgeResult)
+        {
+            case JudgeType.LateGood:
+            case JudgeType.FastGood:
+                judgeObj.GetChild(0).gameObject.GetComponent<SpriteRenderer>().sprite = judgeText[1];
+                break;
+            case JudgeType.LateGreat:
+            case JudgeType.LateGreat1:
+            case JudgeType.LateGreat2:
+            case JudgeType.FastGreat2:
+            case JudgeType.FastGreat1:
+            case JudgeType.FastGreat:
+                judgeObj.GetChild(0).gameObject.GetComponent<SpriteRenderer>().sprite = judgeText[2];
+                break;
+            case JudgeType.LatePerfect2:
+            case JudgeType.FastPerfect2:
+            case JudgeType.LatePerfect1:
+            case JudgeType.FastPerfect1:
+                judgeObj.GetChild(0).gameObject.GetComponent<SpriteRenderer>().sprite = judgeText[3];
+                break;
+            case JudgeType.Perfect:
+                judgeObj.GetChild(0).gameObject.GetComponent<SpriteRenderer>().sprite = judgeText[4];
+                break;
+            case JudgeType.Miss:
+                judgeObj.GetChild(0).gameObject.GetComponent<SpriteRenderer>().sprite = judgeText[0];
+                break;
+            default:
+                break;
+        }
+        if(judgeResult != JudgeType.Miss)
+            Instantiate(tapEffect, transform.position, transform.rotation);
+        anim.SetTrigger("touch");
     }
     public void setLayer(int newLayer)
     {
@@ -248,7 +305,15 @@ public class TouchDrop : NoteDrop
             multTouchEffect3.SetActive(false);
         }
     }
+    Quaternion GetRoation()
+    {
+        if (sensor.Type == SensorType.C)
+            return Quaternion.Euler(Vector3.zero);
+        var d = Vector3.zero - transform.position;
+        var deg = 180 + Mathf.Atan2(d.x, d.y) * Mathf.Rad2Deg;
 
+        return Quaternion.Euler(new Vector3(0, 0, -deg));
+    }
     public void layerDown()
     {
         setLayer(layer - 1);

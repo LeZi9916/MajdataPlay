@@ -406,6 +406,9 @@ MonoBehaviour:
   tapEffect: {fileID: 544298055609030963, guid: ce8dca9ef711fc640a1b90ad7fb49838,
     type: 3}
   justEffect: {fileID: 3167371521865756101}
+  judgeEffect: {fileID: 2214473122963414705, guid: e863ee95f9b63c044a47510ad82daf33,
+    type: 3}
+  animController: {fileID: 9100000, guid: 587e5e843c785b14790ad20035f041c5, type: 2}
   multTouchEffect2: {fileID: 3167371522247862228}
   multTouchEffect3: {fileID: 3167371522402805961}
   fanNormalSprite: {fileID: 0}

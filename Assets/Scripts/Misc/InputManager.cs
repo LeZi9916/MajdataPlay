@@ -35,6 +35,9 @@ public class InputManager : MonoBehaviour
     {
         var count = Input.touchCount;
         CheckKey(new KeyCode[] {KeyCode.LeftArrow , KeyCode.RightArrow});
+
+        if (Input.GetKeyDown(KeyCode.Home))
+            AutoPlay = !AutoPlay;
         if (Input.GetMouseButton(0))
         {
             Vector3 screenPosition = Input.mousePosition;
@@ -51,7 +54,6 @@ public class InputManager : MonoBehaviour
                 sManager.SetSensorOff(s.Type, guid);
             triggerSensors.Clear();
         }
-        
 
     }
     void CheckKey(KeyCode[] keys)

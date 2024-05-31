@@ -662,6 +662,12 @@ MonoBehaviour:
     type: 3}
   holdEffect: {fileID: 692072832370815118, guid: 0bed8d7e7c63e184ab46c11a9653a6e2,
     type: 3}
+  judgeEffect: {fileID: 2214473122963414705, guid: e863ee95f9b63c044a47510ad82daf33,
+    type: 3}
+  touchHoldBoard: {fileID: 21300000, guid: 681871fcccbc55d459f5f087357e456c, type: 3}
+  touchHoldBoard_Miss: {fileID: 21300000, guid: 889dc6c813d8a8744a3e20fc8964cd9b,
+    type: 3}
+  boarder: {fileID: 4570065831695336312}
   TouchHoldSprite:
   - {fileID: 0}
   - {fileID: 0}

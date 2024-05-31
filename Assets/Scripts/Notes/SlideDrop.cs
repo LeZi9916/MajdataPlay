@@ -361,7 +361,7 @@ public class SlideDrop : NoteLongDrop, IFlasher
                 first.Judge(t, sensor.Status);
             }
 
-            if (second is not null && first.CanSkip)
+            if (second is not null && (first.CanSkip || first.On))
             {
                 var sType = second.GetSensorTypes();
                 foreach (var t in sType)

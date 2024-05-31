@@ -212,7 +212,7 @@ public class StarDrop : NoteDrop
 
             if (timing > 0.02)
             {
-                judgeResult = JudgeType.Perfect;
+                //judgeResult = JudgeType.Perfect;
                 Destroy(tapLine);
                 Destroy(gameObject);
             }
@@ -220,7 +220,7 @@ public class StarDrop : NoteDrop
     }
     void Check(SensorType s, SensorStatus oStatus, SensorStatus nStatus)
     {
-        if (isJudged)
+        if (isJudged || !noteManager.CanJudge(gameObject, startPosition))
             return;
         if (oStatus == SensorStatus.Off && nStatus == SensorStatus.On)
         {
