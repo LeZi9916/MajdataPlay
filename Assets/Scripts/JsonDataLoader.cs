@@ -442,7 +442,7 @@ public class JsonDataLoader : MonoBehaviour
 
                         if (note.isForceStar)
                         {
-                            NDCompo.normalSpr = customSkin.Star;
+                            NDCompo.tapSpr = customSkin.Star;
                             NDCompo.eachSpr = customSkin.Star_Each;
                             NDCompo.breakSpr = customSkin.Star_Break;
                             NDCompo.exSpr = customSkin.Star_Ex;
@@ -452,7 +452,7 @@ public class JsonDataLoader : MonoBehaviour
                         else
                         {
                             //自定义note样式
-                            NDCompo.normalSpr = customSkin.Tap;
+                            NDCompo.tapSpr = customSkin.Tap;
                             NDCompo.breakSpr = customSkin.Tap_Break;
                             NDCompo.eachSpr = customSkin.Tap_Each;
                             NDCompo.exSpr = customSkin.Tap_Ex;

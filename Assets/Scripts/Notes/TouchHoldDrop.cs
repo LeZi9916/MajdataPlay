@@ -8,13 +8,8 @@ using static Sensor;
 
 public class TouchHoldDrop : NoteLongDrop
 {
-    // public float time;
-    // public float LastFor = 1f;
-    public float speed = 1;
     public bool isFirework;
-
     public GameObject tapEffect;
-    public GameObject holdEffect;
     public GameObject judgeEffect;
 
     public Sprite touchHoldBoard;
@@ -32,19 +27,9 @@ public class TouchHoldDrop : NoteLongDrop
     private Animator fireworkEffect;
     private float moveDuration;
 
-    private AudioTimeProvider timeProvider;
-
     private float wholeDuration;
 
-    Guid guid = Guid.NewGuid();
-    SensorManager manager;
-    Sensor sensor;
-    NoteManager noteManager;
-    JudgeType headJudge;
-    bool isJudged = false;
     Sprite[] judgeText;
-    Stopwatch userHold = new();
-    float judgeDiff = -1;
 
     // Start is called before the first frame update
     private void Start()
@@ -134,7 +119,7 @@ public class TouchHoldDrop : NoteLongDrop
         judgeDiff = isFast ? -diff : diff;
         if (!userHold.IsRunning)
             userHold.Start();
-        headJudge = result;
+        judgeResult = result;
         PlayHoldEffect();
         isJudged = true;
     }
@@ -145,7 +130,7 @@ public class TouchHoldDrop : NoteLongDrop
         if (!isJudged && timing > 0.316667f)
         {
             judgeDiff = 316.667f;
-            headJudge = JudgeType.Miss;
+            judgeResult = JudgeType.Miss;
             sensor.OnSensorStatusChange -= Check;
             isJudged = true;
             GameObject.Find("Notes").GetComponent<NoteManager>().touchCount[SensorType.C]++;
@@ -161,13 +146,14 @@ public class TouchHoldDrop : NoteLongDrop
 
         if (isJudged)
         {
+            if(sensor.Status == SensorStatus.On)
+                PlayHoldEffect();
             if (timing < 0.25f || holdTime > -0.2f)
                 return;
             if (sensor.Status == SensorStatus.On)
             {
                 if (!userHold.IsRunning)
                     userHold.Start();
-                PlayHoldEffect();
             }
             else if (sensor.Status == SensorStatus.Off)
             {
@@ -219,35 +205,35 @@ public class TouchHoldDrop : NoteLongDrop
             diff = MathF.Max(judgeDiff, 250) + 200;
         var realityHT = LastFor - 0.45f;
         var percent = MathF.Min(1, ((userHold.ElapsedMilliseconds - diff) / 1000f) / realityHT);
-        JudgeType result = headJudge;
+        JudgeType result = judgeResult;
         if (realityHT > 0)
         {
             if (percent == 1)
-                result = headJudge;
+                result = judgeResult;
             else if (percent >= 0.67f)
             {
-                if (headJudge == JudgeType.Miss)
+                if (judgeResult == JudgeType.Miss)
                     result = JudgeType.LateGood;
-                else if (MathF.Abs((int)headJudge - 7) == 6)
-                    result = (int)headJudge < 7 ? JudgeType.LateGreat : JudgeType.FastGreat;
-                else if (headJudge == JudgeType.Perfect)
-                    result = (int)headJudge < 7 ? JudgeType.LatePerfect1 : JudgeType.FastPerfect1;
+                else if (MathF.Abs((int)judgeResult - 7) == 6)
+                    result = (int)judgeResult < 7 ? JudgeType.LateGreat : JudgeType.FastGreat;
+                else if (judgeResult == JudgeType.Perfect)
+                    result = (int)judgeResult < 7 ? JudgeType.LatePerfect1 : JudgeType.FastPerfect1;
             }
             else if (percent >= 0.33f)
             {
-                if (MathF.Abs((int)headJudge - 7) >= 6)
-                    result = (int)headJudge < 7 ? JudgeType.LateGood : JudgeType.FastGood;
+                if (MathF.Abs((int)judgeResult - 7) >= 6)
+                    result = (int)judgeResult < 7 ? JudgeType.LateGood : JudgeType.FastGood;
                 else
-                    result = (int)headJudge < 7 ? JudgeType.LateGreat : JudgeType.FastGreat;
+                    result = (int)judgeResult < 7 ? JudgeType.LateGreat : JudgeType.FastGreat;
             }
             else if (percent >= 0.05f)
-                result = (int)headJudge < 7 ? JudgeType.LateGood : JudgeType.FastGood;
+                result = (int)judgeResult < 7 ? JudgeType.LateGood : JudgeType.FastGood;
             else if (percent >= 0)
             {
-                if (headJudge == JudgeType.Miss)
+                if (judgeResult == JudgeType.Miss)
                     result = JudgeType.Miss;
                 else
-                    result = (int)headJudge < 7 ? JudgeType.LateGood : JudgeType.FastGood;
+                    result = (int)judgeResult < 7 ? JudgeType.LateGood : JudgeType.FastGood;
             }
         }
         
@@ -263,39 +249,9 @@ public class TouchHoldDrop : NoteLongDrop
         PlayJudgeEffect(result);
     }
 
-    void PlayHoldEffect()
+    protected override void PlayHoldEffect()
     {
-        if (GameObject.Find("Input").GetComponent<InputManager>().AutoPlay)
-            manager.SetSensorOn(sensor.Type, guid);
-        var material = holdEffect.GetComponent<ParticleSystemRenderer>().material;
-        switch (headJudge)
-        {
-            case JudgeType.LatePerfect2:
-            case JudgeType.FastPerfect2:
-            case JudgeType.LatePerfect1:
-            case JudgeType.FastPerfect1:
-            case JudgeType.Perfect:
-                material.SetColor("_Color", new Color(1f, 0.93f, 0.61f)); // Yellow
-                break;
-            case JudgeType.LateGreat:
-            case JudgeType.LateGreat1:
-            case JudgeType.LateGreat2:
-            case JudgeType.FastGreat2:
-            case JudgeType.FastGreat1:
-            case JudgeType.FastGreat:
-                material.SetColor("_Color", new Color(1f, 0.70f, 0.94f)); // Pink
-                break;
-            case JudgeType.LateGood:
-            case JudgeType.FastGood:
-                material.SetColor("_Color", new Color(0.56f, 1f, 0.59f)); // Green
-                break;
-            case JudgeType.Miss:
-                material.SetColor("_Color", new Color(1f, 1f, 1f));
-                break;
-            default:
-                break;
-        }
-        holdEffect.SetActive(true);
+        base.PlayHoldEffect();
         boarder.sprite = touchHoldBoard;
     }
     void PlayJudgeEffect(JudgeType judgeResult)
@@ -348,9 +304,9 @@ public class TouchHoldDrop : NoteLongDrop
         }
         anim.SetTrigger("touch");
     }
-    void StopHoldEffect()
+    protected override void StopHoldEffect()
     {
-        holdEffect.SetActive(false);
+        base.StopHoldEffect();
         boarder.sprite = touchHoldBoard_Miss;
     }
     private Vector3 GetAngle(int index)

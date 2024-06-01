@@ -1,23 +1,14 @@
-﻿using System;
+﻿using Assets.Scripts;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.U2D;
 using static NoteEffectManager;
 using static Sensor;
 
-public class TouchDrop : NoteDrop
+public class TouchDrop : TouchBase
 {
-    // public float time;
-    public float speed = 7;
-    public char areaPosition;
-    public bool isEach;
-    public bool isFirework;
-
-    public int startPosition;
-
-    public GameObject tapEffect;
     public GameObject justEffect;
-    public GameObject judgeEffect;
 
     public GameObject multTouchEffect2;
     public GameObject multTouchEffect3;
@@ -44,20 +35,10 @@ public class TouchDrop : NoteDrop
     private float moveDuration;
     private MultTouchHandler multTouchHandler;
 
-    private AudioTimeProvider timeProvider;
-
     private float wholeDuration;
 
-    Guid guid = Guid.NewGuid();
-    SensorManager manager;
-    Sensor sensor;
-    NoteManager noteManager;
-    JudgeType judgeResult;
-    bool isJudged = false;
-    Sprite[] judgeText;
-
     // Start is called before the first frame update
-    private void Start()
+    void Start()
     {
         wholeDuration = 3.209385682f * Mathf.Pow(speed, -0.9549621752f);
         moveDuration = 0.8f * wholeDuration;
@@ -167,24 +148,6 @@ public class TouchDrop : NoteDrop
         judgeResult = result;
         isJudged = true;
     }
-    public SensorType GetSensor()
-    {
-        switch(areaPosition)
-        {
-            case 'A':
-                return (SensorType)(startPosition - 1);
-            case 'B':
-                return (SensorType)(startPosition + 7);
-            case 'C':
-                return SensorType.C;
-            case 'D':
-                return (SensorType)(startPosition + 16);
-            case 'E':
-                return (SensorType)(startPosition + 24);
-            default:
-                return SensorType.A1;
-        }
-    }
     // Update is called once per frame
     private void Update()
     {
@@ -250,7 +213,11 @@ public class TouchDrop : NoteDrop
     {
         var obj = Instantiate(judgeEffect, Vector3.zero,transform.rotation);
         var judgeObj = obj.transform.GetChild(0);
-        judgeObj.transform.position = transform.position;
+        var d = transform.position.magnitude;
+        if (d != 0)
+            judgeObj.transform.position = transform.position * (MathF.Max(0, d - 0.46f) / d);
+        else
+            judgeObj.transform.position = transform.position;
         judgeObj.GetChild(0).transform.rotation = GetRoation();
         var anim = obj.GetComponent<Animator>();
         switch(judgeResult)
@@ -304,15 +271,6 @@ public class TouchDrop : NoteDrop
             multTouchEffect2.SetActive(false);
             multTouchEffect3.SetActive(false);
         }
-    }
-    Quaternion GetRoation()
-    {
-        if (sensor.Type == SensorType.C)
-            return Quaternion.Euler(Vector3.zero);
-        var d = Vector3.zero - transform.position;
-        var deg = 180 + Mathf.Atan2(d.x, d.y) * Mathf.Rad2Deg;
-
-        return Quaternion.Euler(new Vector3(0, 0, -deg));
     }
     public void layerDown()
     {

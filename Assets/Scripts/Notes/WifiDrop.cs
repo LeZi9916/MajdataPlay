@@ -1,13 +1,11 @@
 ﻿using Assets.Scripts.Interfaces;
 using Assets.Scripts.Notes;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using static NoteEffectManager;
-using static Sensor;
 
 public class WifiDrop : NoteLongDrop,IFlasher
 {
@@ -26,17 +24,11 @@ public class WifiDrop : NoteLongDrop,IFlasher
 
     public bool isJustR;
 
-    // public float time;
     public float timeStart;
-
-    // public float LastFor = 1f;
-    public float speed;
-    public bool isEach;
     public bool isBreak;
     public bool isGroupPart;
     public bool isGroupPartEnd;
 
-    public int startPosition = 1;
     public int endPosition;
     public int sortIndex;
 
@@ -68,13 +60,10 @@ public class WifiDrop : NoteLongDrop,IFlasher
 
     private bool isDestroying = false;
 
-    private AudioTimeProvider timeProvider;
     public ConnSlideInfo ConnectInfo { get; set; }
     bool isFinished { get => _judgeQueues.All(x => x.Count == 0); }
     public GameObject parent;
-    bool parentFinished = false;
     bool canCheck = false;
-    bool isJudged = false;
     Dictionary<GameObject, Guid> guids = new();
     SensorManager sManager;
     List<GameObject> sensors = new();
@@ -588,19 +577,5 @@ public class WifiDrop : NoteLongDrop,IFlasher
             oldColor.a = alpha;
             sr.color = oldColor;
         }
-    }
-
-    private Vector3 getPositionFromDistance(float distance)
-    {
-        return new Vector3(
-            distance * Mathf.Cos((startPosition * -2f + 5f) * 0.125f * Mathf.PI),
-            distance * Mathf.Sin((startPosition * -2f + 5f) * 0.125f * Mathf.PI));
-    }
-
-    private Vector3 getPositionFromDistance(float distance, int position)
-    {
-        return new Vector3(
-            distance * Mathf.Cos((position * -2f + 5f) * 0.125f * Mathf.PI),
-            distance * Mathf.Sin((position * -2f + 5f) * 0.125f * Mathf.PI));
     }
 }

@@ -1,17 +1,10 @@
 ﻿using System;
-using System.Diagnostics;
 using UnityEngine;
 using static NoteEffectManager;
 using static Sensor;
-using static UnityEngine.EventSystems.EventTrigger;
-using Random = System.Random;
 
 public class HoldDrop : NoteLongDrop
 {
-    public int startPosition = 1;
-    public float speed = 1;
-
-    public bool isEach;
     public bool isEX;
     public bool isBreak;
 
@@ -33,10 +26,7 @@ public class HoldDrop : NoteLongDrop
     public RuntimeAnimatorController HoldShine;
     public RuntimeAnimatorController BreakShine;
 
-    public GameObject holdEffect;
-
     public GameObject tapLine;
-    public Material missMaterial;
 
     public Color exEffectTap;
     public Color exEffectEach;
@@ -45,7 +35,6 @@ public class HoldDrop : NoteLongDrop
 
     public Material breakMaterial;
 
-    private bool breakAnimStart;
     private SpriteRenderer exSpriteRender;
     private bool holdAnimStart;
     private SpriteRenderer holdEndRender;
@@ -53,17 +42,7 @@ public class HoldDrop : NoteLongDrop
 
     private SpriteRenderer spriteRenderer;
 
-    private AudioTimeProvider timeProvider;
-
-    Guid guid = Guid.NewGuid();
-    Sensor sensor;
-    SensorManager manager;
-    JudgeType headJudge;
-    bool isJudged;
-    NoteManager noteManager;
     InputManager inputManager;
-    Stopwatch userHold = new();
-    float judgeDiff = -1;
 
     private void Start()
     {
@@ -133,7 +112,7 @@ public class HoldDrop : NoteLongDrop
         if (!isJudged && timing > 0.15f)
         {
             judgeDiff = 150;
-            headJudge = JudgeType.Miss;
+            judgeResult = JudgeType.Miss;
             sensor.OnSensorStatusChange -= Check;
             inputManager.OnSensorStatusChange -= Check;
             isJudged = true;
@@ -151,13 +130,14 @@ public class HoldDrop : NoteLongDrop
 
         if(isJudged)
         {
+            if (sensor.Status == SensorStatus.On)
+                PlayHoldEffect();
             if (timing < 0.1f || holdTime > -0.2f)
                 return;
             if(sensor.Status == SensorStatus.On)
             {
                 if(!userHold.IsRunning)
                     userHold.Start();
-                PlayHoldEffect();
             }
             else if(sensor.Status == SensorStatus.Off)
             {
@@ -236,7 +216,7 @@ public class HoldDrop : NoteLongDrop
         if (!userHold.IsRunning)
             userHold.Start();
         PlayHoldEffect();
-        headJudge = result;
+        judgeResult = result;
         isJudged = true;
     }
     // Update is called once per frame
@@ -334,42 +314,42 @@ public class HoldDrop : NoteLongDrop
             diff = MathF.Max(judgeDiff,100) + 200;
         var realityHT = LastFor - 0.3f;
         var percent = MathF.Min(1, ((userHold.ElapsedMilliseconds - diff) / 1000f) / realityHT);
-        JudgeType result = headJudge;
+        JudgeType result = judgeResult;
         if(realityHT > 0)
         {
             if (percent == 1)
             {
-                if(headJudge == JudgeType.Miss)
+                if(judgeResult == JudgeType.Miss)
                     result = JudgeType.LateGood;
-                else if (MathF.Abs((int)headJudge - 7) == 6)
-                    result = (int)headJudge < 7 ? JudgeType.LateGreat : JudgeType.FastGreat;
+                else if (MathF.Abs((int)judgeResult - 7) == 6)
+                    result = (int)judgeResult < 7 ? JudgeType.LateGreat : JudgeType.FastGreat;
                 else
-                    result = headJudge;
+                    result = judgeResult;
             }
             else if (percent >= 0.67f)
             {
-                if (headJudge == JudgeType.Miss)
+                if (judgeResult == JudgeType.Miss)
                     result = JudgeType.LateGood;
-                else if (MathF.Abs((int)headJudge - 7) == 6)
-                    result = (int)headJudge < 7 ? JudgeType.LateGreat : JudgeType.FastGreat;
-                else if (headJudge == JudgeType.Perfect)
-                    result = (int)headJudge < 7 ? JudgeType.LatePerfect1 : JudgeType.FastPerfect1;
+                else if (MathF.Abs((int)judgeResult - 7) == 6)
+                    result = (int)judgeResult < 7 ? JudgeType.LateGreat : JudgeType.FastGreat;
+                else if (judgeResult == JudgeType.Perfect)
+                    result = (int)judgeResult < 7 ? JudgeType.LatePerfect1 : JudgeType.FastPerfect1;
             }
             else if (percent >= 0.33f)
             {
-                if (MathF.Abs((int)headJudge - 7) >= 6)
-                    result = (int)headJudge < 7 ? JudgeType.LateGood : JudgeType.FastGood;
+                if (MathF.Abs((int)judgeResult - 7) >= 6)
+                    result = (int)judgeResult < 7 ? JudgeType.LateGood : JudgeType.FastGood;
                 else
-                    result = (int)headJudge < 7 ? JudgeType.LateGreat : JudgeType.FastGreat;
+                    result = (int)judgeResult < 7 ? JudgeType.LateGreat : JudgeType.FastGreat;
             }
             else if (percent >= 0.05f)
-                result = (int)headJudge < 7 ? JudgeType.LateGood : JudgeType.FastGood;
+                result = (int)judgeResult < 7 ? JudgeType.LateGood : JudgeType.FastGood;
             else if (percent >= 0)
             {
-                if (headJudge == JudgeType.Miss)
+                if (judgeResult == JudgeType.Miss)
                     result = JudgeType.Miss;
                 else
-                    result = (int)headJudge < 7 ? JudgeType.LateGood : JudgeType.FastGood;
+                    result = (int)judgeResult < 7 ? JudgeType.LateGood : JudgeType.FastGood;
             }
         }
         var effectManager = GameObject.Find("NoteEffects").GetComponent<NoteEffectManager>();
@@ -386,43 +366,10 @@ public class HoldDrop : NoteLongDrop
         sensor.OnSensorStatusChange -= Check;
         inputManager.OnSensorStatusChange -= Check;
     }
-    void PlayHoldEffect()
+    protected override void PlayHoldEffect()
     {
-        if(GameObject.Find("Input").GetComponent<InputManager>().AutoPlay)
-            manager.SetSensorOn(sensor.Type, guid);
-        if (timeProvider.AudioTime - time < 0)
-            return;
+        base.PlayHoldEffect();
         GameObject.Find("NoteEffects").GetComponent<NoteEffectManager>().ResetEffect(startPosition);
-        holdEffect.SetActive(true);
-
-        var material = holdEffect.GetComponent<ParticleSystemRenderer>().material;
-        switch (headJudge)
-        {
-            case JudgeType.LatePerfect2:
-            case JudgeType.FastPerfect2:
-            case JudgeType.LatePerfect1:
-            case JudgeType.FastPerfect1:
-            case JudgeType.Perfect:
-                material.SetColor("_Color", new Color(1f, 0.93f, 0.61f)); // Yellow
-                break;
-            case JudgeType.LateGreat:
-            case JudgeType.LateGreat1:
-            case JudgeType.LateGreat2:
-            case JudgeType.FastGreat2:
-            case JudgeType.FastGreat1:
-            case JudgeType.FastGreat:
-                material.SetColor("_Color", new Color(1f, 0.70f, 0.94f)); // Pink
-                break;
-            case JudgeType.LateGood:
-            case JudgeType.FastGood:
-                material.SetColor("_Color", new Color(0.56f, 1f, 0.59f)); // Green
-                break;
-            case JudgeType.Miss:
-                material.SetColor("_Color", new Color(1f, 1f, 1f));
-                break;
-            default:
-                break;
-        }
         if (LastFor <= 0.3)
             return;
         else if (!holdAnimStart && timeProvider.AudioTime - time > 0.1)//忽略开头6帧与结尾12帧
@@ -439,20 +386,14 @@ public class HoldDrop : NoteLongDrop
                 sprRenderer.sprite = holdOnSpr;
         }
     }
-    void StopHoldEffect()
+    protected override void StopHoldEffect()
     {
+        base.StopHoldEffect();
         holdAnimStart = false;
         animator.runtimeAnimatorController = HoldShine;
         animator.enabled = false;
-        holdEffect.SetActive(false);
         var sprRenderer = GetComponent<SpriteRenderer>();
         sprRenderer.sprite = holdOffSpr;
     }
 
-    private Vector3 getPositionFromDistance(float distance)
-    {
-        return new Vector3(
-            distance * Mathf.Cos((startPosition * -2f + 5f) * 0.125f * Mathf.PI),
-            distance * Mathf.Sin((startPosition * -2f + 5f) * 0.125f * Mathf.PI));
-    }
 }

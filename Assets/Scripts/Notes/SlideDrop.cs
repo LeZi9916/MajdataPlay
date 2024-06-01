@@ -22,16 +22,12 @@ public class SlideDrop : NoteLongDrop, IFlasher
     public bool isMirror;
     public bool isJustR;
     public bool isSpecialFlip; // fixes known star problem
-    public bool isEach;
     public bool isBreak;
 
     // public float time;
     public float timeStart;
 
     // public float LastFor = 1f;
-    public float speed;
-
-    public int startPosition = 1;
 
     public int sortIndex;
 
@@ -70,18 +66,14 @@ public class SlideDrop : NoteLongDrop, IFlasher
 
     private SpriteRenderer spriteRenderer_star;
 
-    private bool startShining;
     bool isDestroying = false;
 
-    private AudioTimeProvider timeProvider;
 
     public int endPosition;
 
-    Guid guid = Guid.NewGuid();
     List<GameObject> sensors = new();
     SensorManager sManager;
 
-    bool isJudged = false;
     bool canCheck = false;
     List<Sensor> registerSensors = new();
 
@@ -333,7 +325,7 @@ public class SlideDrop : NoteLongDrop, IFlasher
                 }
                 Running();
             }
-            catch (Exception e)
+            catch
             {
             }
         }
@@ -655,14 +647,6 @@ public class SlideDrop : NoteLongDrop, IFlasher
     {
         foreach (var gm in slideBars) gm.GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, alpha);
     }
-
-    private Vector3 getPositionFromDistance(float distance)
-    {
-        return new Vector3(
-            distance * Mathf.Cos((startPosition * -2f + 5f) * 0.125f * Mathf.PI),
-            distance * Mathf.Sin((startPosition * -2f + 5f) * 0.125f * Mathf.PI));
-    }
-
     private void applyStarRotation(Quaternion newRotation)
     {
         var halfFlip = newRotation.eulerAngles;
