@@ -304,6 +304,13 @@
       },
       "url": "https://packages.unity.com"
     },
+    "dev.isas.mychio": {
+      "version": "https://github.com/istareatscreens/MychIO.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "73ba4c2d98abc4e658a8d665c9ad082fedb4a6ae"
+    },
     "unity-missing-scripts-finder": {
       "version": "https://github.com/RimuruDev/Unity-MissingScriptsFinder.git",
       "depth": 0,
