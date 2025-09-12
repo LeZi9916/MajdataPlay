@@ -231,7 +231,9 @@ namespace MajdataPlay
             }
             finally
             {
+                #if UNITY_STANDALONE_WIN
                 WinHidManager.QuitThisBs();
+                #endif
                 SaveConfig();
             }
         }
