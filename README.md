@@ -1,5 +1,11 @@
 # MajdataPlay
 
+> [!IMPORTANT]
+> This branch is under development and is not guaranteed to work in all cases.
+> (I know it doesn't work for mine just yet)
+> If you just want to hook up your "giant iPod" and play on Windows, please use
+> the releases from the upstream repository. (linked below)
+
 ![license GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue)
 ![GitHub Release](https://img.shields.io/github/v/release/LingFeng-bbben/MajdataPlay?include_prereleases)
 ![Discord](https://badgen.net/discord/online-members/AcWgZN7j6K)
